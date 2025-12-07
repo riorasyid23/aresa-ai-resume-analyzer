@@ -131,24 +131,24 @@ export default function History() {
                   </div>
 
                   <div>
-                    <h4 className="font-medium text-red-700 mb-2">Areas for Improvement ({analysis.weaknesses.length})</h4>
+                    <h4 className="font-medium text-red-700 mb-2">Areas for Improvement ({analysis && analysis.weaknesses ? analysis.weaknesses.length : 0})</h4>
                     <ul className="text-sm text-gray-600 space-y-1">
-                      {analysis.weaknesses.slice(0, 2).map((weakness, i) => (
+                      {(analysis.weaknesses || []).slice(0, 2).map((weakness, i) => (
                         <li key={i} className="truncate">• {weakness}</li>
                       ))}
-                      {analysis.weaknesses.length > 2 && (
+                      {(analysis && analysis.weaknesses ? analysis.weaknesses.length : 0) > 2 && (
                         <li className="text-gray-500">+{analysis.weaknesses.length - 2} more</li>
                       )}
                     </ul>
                   </div>
 
                   <div>
-                    <h4 className="font-medium text-blue-700 mb-2">Recommendations ({analysis.improvements.length})</h4>
+                    <h4 className="font-medium text-blue-700 mb-2">Recommendations ({analysis && analysis.improvements ? analysis.improvements.length : 0})</h4>
                     <ul className="text-sm text-gray-600 space-y-1">
-                      {analysis.improvements.slice(0, 2).map((improvement, i) => (
+                      {(analysis.improvements || []).slice(0, 2).map((improvement, i) => (
                         <li key={i} className="truncate">• {improvement}</li>
                       ))}
-                      {analysis.improvements.length > 2 && (
+                      {(analysis && analysis.improvements ? analysis.improvements.length : 0) > 2 && (
                         <li className="text-gray-500">+{analysis.improvements.length - 2} more</li>
                       )}
                     </ul>

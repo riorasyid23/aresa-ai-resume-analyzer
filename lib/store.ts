@@ -7,10 +7,14 @@ export interface AnalysisResult {
   strengths: string[]
   weaknesses: string[]
   improvements: string[]
-  rewritten_summary: string
+  rewritten_summary?: string // Optional for portfolio analysis
+  summary?: string // For portfolio analysis
   timestamp: number
   resumeText?: string
   filename?: string
+  portfolioUrl?: string
+  type?: 'resume' | 'portfolio'
+  error?: string
 }
 
 interface AnalysisStore {

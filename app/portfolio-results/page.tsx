@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAnalysisStore } from '@/lib/store'
@@ -8,35 +7,35 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
-import { Skeleton } from '@/components/ui/skeleton'
 
-interface AnalysisResult {
-  success: boolean
-  score: number
-  strengths: string[]
-  weaknesses: string[]
-  improvements: string[]
-  rewritten_summary: string
-  error?: string
-}
-
-export default function Results() {
+export default function PortfolioResults() {
   const router = useRouter()
   const currentAnalysis = useAnalysisStore((state) => state.currentAnalysis)
-  const [isLoading, setIsLoading] = useState(false)
 
   if (!currentAnalysis) {
     return (
       <div className="text-center">
         <p className="text-red-600 mb-4">No analysis data found</p>
         <Link href="/" className="text-blue-600 hover:text-blue-800">
-          Go back to upload
+          Go back to analysis
         </Link>
       </div>
     )
   }
 
   const result = currentAnalysis
+
+  // Check if this is a portfolio analysis
+  if (result.type !== 'portfolio') {
+    return (
+      <div className="text-center">
+        <p className="text-red-600 mb-4">This page is for portfolio analysis results only</p>
+        <Link href="/" className="text-blue-600 hover:text-blue-800">
+          Go back to analysis
+        </Link>
+      </div>
+    )
+  }
 
   // Check if the result has an error or missing required properties
   if (result?.error || !Array.isArray(result.strengths) || !Array.isArray(result.weaknesses) || !Array.isArray(result.improvements)) {
@@ -49,7 +48,7 @@ export default function Results() {
           Debug info: success={result.success}, hasStrengths={Array.isArray(result.strengths)}, hasWeaknesses={Array.isArray(result.weaknesses)}, hasImprovements={Array.isArray(result.improvements)}
         </p>
         <Link href="/" className="text-blue-600 hover:text-blue-800">
-          Go back to upload
+          Go back to analysis
         </Link>
       </div>
     )
@@ -83,18 +82,25 @@ export default function Results() {
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          ARESA Analysis Results
+          ARESA Portfolio Analysis Results
         </h1>
+        {result.portfolioUrl && (
+          <p className="text-gray-600 mb-2">
+            Analyzed: <a href={result.portfolioUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+              {result.portfolioUrl}
+            </a>
+          </p>
+        )}
         <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm">
-          ← Analyze another resume
+          ← Analyze another portfolio or resume
         </Link>
       </div>
 
-      {/* Resume Score */}
+      {/* Portfolio Score */}
       <Card className="mb-6">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <CardTitle className="text-xl">Resume Score</CardTitle>
+            <CardTitle className="text-xl">Portfolio Score</CardTitle>
             <Badge variant={getScoreBadgeVariant(result.score)}>
               {getScoreLabel(result.score)}
             </Badge>
@@ -112,9 +118,9 @@ export default function Results() {
         </CardHeader>
         <CardContent className="text-center">
           <p className="text-gray-600">
-            {result.score >= 80 ? 'Excellent resume!' :
-             result.score >= 60 ? 'Good resume with room for improvement' :
-             'Resume needs significant improvements'}
+            {result.score >= 80 ? 'Excellent portfolio!' :
+             result.score >= 60 ? 'Good portfolio with room for improvement' :
+             'Portfolio needs significant improvements'}
           </p>
         </CardContent>
       </Card>
@@ -190,20 +196,20 @@ export default function Results() {
         </CardContent>
       </Card>
 
-      {/* Rewritten Summary */}
-      {result.rewritten_summary && (
+      {/* Portfolio Summary */}
+      {result.summary && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-purple-700">
               <Badge variant="secondary" className="bg-purple-100 text-purple-800 hover:bg-purple-100">
-                ✨ Suggested Summary Rewrite
+                📊 Portfolio Summary
               </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="bg-muted rounded-md p-4">
-              <p className="text-gray-700 whitespace-pre-line">
-                {result.rewritten_summary}
+              <p className="text-gray-700">
+                {result.summary}
               </p>
             </div>
           </CardContent>

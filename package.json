@@ -8,11 +8,21 @@
     "start": "next start"
   },
   "dependencies": {
+    "@radix-ui/react-progress": "^1.1.8",
+    "@radix-ui/react-separator": "^1.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
+    "cheerio": "^1.1.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "groq-sdk": "^0.37.0",
+    "lucide-react": "^0.556.0",
+    "mammoth": "^1.11.0",
     "next": "15.0.0",
     "pdf-parse": "^1.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss-animate": "^1.0.7",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
