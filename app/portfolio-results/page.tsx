@@ -81,17 +81,17 @@ export default function PortfolioResults() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           ARESA Portfolio Analysis Results
         </h1>
         {result.portfolioUrl && (
-          <p className="text-gray-600 mb-2">
-            Analyzed: <a href={result.portfolioUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+          <p className="text-muted-foreground mb-2">
+            Analyzed: <a href={result.portfolioUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
               {result.portfolioUrl}
             </a>
           </p>
         )}
-        <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm">
+        <Link href="/" className="text-primary hover:text-primary/80 text-sm">
           ← Analyze another portfolio or resume
         </Link>
       </div>
@@ -117,7 +117,7 @@ export default function PortfolioResults() {
           </div>
         </CardHeader>
         <CardContent className="text-center">
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             {result.score >= 80 ? 'Excellent portfolio!' :
              result.score >= 60 ? 'Good portfolio with room for improvement' :
              'Portfolio needs significant improvements'}
@@ -140,7 +140,7 @@ export default function PortfolioResults() {
           <CardContent>
             <ul className="space-y-3">
               {result.strengths.map((strength: string, index: number) => (
-                <li key={index} className="text-gray-700 flex items-start">
+                <li key={index} className="text-foreground flex items-start">
                   <span className="text-green-500 mr-3 mt-0.5">•</span>
                   <span>{strength}</span>
                 </li>
@@ -161,7 +161,7 @@ export default function PortfolioResults() {
           <CardContent>
             <ul className="space-y-3">
               {result.weaknesses.map((weakness: string, index: number) => (
-                <li key={index} className="text-gray-700 flex items-start">
+                <li key={index} className="text-foreground flex items-start">
                   <span className="text-red-500 mr-3 mt-0.5">•</span>
                   <span>{weakness}</span>
                 </li>
@@ -185,7 +185,7 @@ export default function PortfolioResults() {
         <CardContent>
           <ul className="space-y-3">
             {result.improvements.map((improvement: string, index: number) => (
-              <li key={index} className="text-gray-700 flex items-start">
+              <li key={index} className="text-foreground flex items-start">
                 <Badge variant="outline" className="mr-3 mt-0.5 flex-shrink-0 w-6 h-6 p-0 flex items-center justify-center text-xs">
                   {index + 1}
                 </Badge>
@@ -208,7 +208,7 @@ export default function PortfolioResults() {
           </CardHeader>
           <CardContent>
             <div className="bg-muted rounded-md p-4">
-              <p className="text-gray-700">
+              <p className="text-foreground">
                 {result.summary}
               </p>
             </div>

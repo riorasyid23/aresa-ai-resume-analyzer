@@ -82,10 +82,10 @@ export default function Results() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           ARESA Analysis Results
         </h1>
-        <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm">
+        <Link href="/" className="text-primary hover:text-primary/80 text-sm">
           ← Analyze another resume
         </Link>
       </div>
@@ -111,7 +111,7 @@ export default function Results() {
           </div>
         </CardHeader>
         <CardContent className="text-center">
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             {result.score >= 80 ? 'Excellent resume!' :
              result.score >= 60 ? 'Good resume with room for improvement' :
              'Resume needs significant improvements'}
@@ -134,7 +134,7 @@ export default function Results() {
           <CardContent>
             <ul className="space-y-3">
               {result.strengths.map((strength: string, index: number) => (
-                <li key={index} className="text-gray-700 flex items-start">
+                <li key={index} className="text-foreground flex items-start">
                   <span className="text-green-500 mr-3 mt-0.5">•</span>
                   <span>{strength}</span>
                 </li>
@@ -155,7 +155,7 @@ export default function Results() {
           <CardContent>
             <ul className="space-y-3">
               {result.weaknesses.map((weakness: string, index: number) => (
-                <li key={index} className="text-gray-700 flex items-start">
+                <li key={index} className="text-foreground flex items-start">
                   <span className="text-red-500 mr-3 mt-0.5">•</span>
                   <span>{weakness}</span>
                 </li>
@@ -179,7 +179,7 @@ export default function Results() {
         <CardContent>
           <ul className="space-y-3">
             {result.improvements.map((improvement: string, index: number) => (
-              <li key={index} className="text-gray-700 flex items-start">
+              <li key={index} className="text-foreground flex items-start">
                 <Badge variant="outline" className="mr-3 mt-0.5 flex-shrink-0 w-6 h-6 p-0 flex items-center justify-center text-xs">
                   {index + 1}
                 </Badge>
@@ -202,7 +202,7 @@ export default function Results() {
           </CardHeader>
           <CardContent>
             <div className="bg-muted rounded-md p-4">
-              <p className="text-gray-700 whitespace-pre-line">
+              <p className="text-foreground whitespace-pre-line">
                 {result.rewritten_summary}
               </p>
             </div>

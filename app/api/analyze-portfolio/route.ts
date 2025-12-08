@@ -13,22 +13,53 @@ interface PortfolioAnalysis {
 
 async function fetchPageContent(url: string): Promise<string> {
   try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; PortfolioAnalyzer/1.0)'
-      }
+      },
+      signal: controller.signal
     })
 
+    clearTimeout(timeoutId)
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch page: ${response.status}`)
+      if (response.status === 404) {
+        throw new Error('Page not found. Please check the URL and try again.')
+      } else if (response.status === 403 || response.status === 401) {
+        throw new Error('Access denied. This page may require authentication or be restricted.')
+      } else if (response.status >= 500) {
+        throw new Error('Server error. The website may be temporarily unavailable.')
+      } else {
+        throw new Error(`Failed to access page (${response.status}). The site may be blocking automated requests.`)
+      }
     }
 
     const html = await response.text()
-    console.log("HTML", html.substring(0, 10))
     return html
   } catch (error) {
     console.error('Error fetching page:', error)
-    throw new Error('Failed to fetch the provided URL')
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out. The website may be slow or unresponsive.')
+      }
+      if (error.message.includes('ENOTFOUND') || error.message.includes('ECONNREFUSED')) {
+        throw new Error('Could not connect to the website. Please check the URL and try again.')
+      }
+      // Re-throw custom error messages
+      if (error.message.includes('Page not found') ||
+          error.message.includes('Access denied') ||
+          error.message.includes('Server error') ||
+          error.message.includes('timed out') ||
+          error.message.includes('connect to the website')) {
+        throw error
+      }
+    }
+
+    throw new Error('Failed to fetch the provided URL. Please check the URL and try again.')
   }
 }
 
@@ -74,19 +105,26 @@ function extractTextFromHTML(html: string): string {
       .replace(/\n+/g, ' ') // Replace newlines with spaces
       .trim()
 
-    // Limit text length to avoid token limits
-    const maxLength = 1000
-    if (extractedText.length > maxLength) {
-      console.log("Limit Reached")
-      extractedText = extractedText.substring(0, maxLength) + '...'
+    // Check if we have meaningful content
+    if (!extractedText || extractedText.length < 50) {
+      throw new Error('Could not extract sufficient readable content from this page. The page may be image-heavy, use unusual formatting, or be protected from automated access.')
     }
 
-    console.log("Extracted", extractedText.substring(0, 10))
+    // Limit text length to avoid token limits
+    const maxLength = 4000
+    if (extractedText.length > maxLength) {
+      extractedText = extractedText.substring(0, maxLength) + '...'
+    }
 
     return extractedText
   } catch (error) {
     console.error('Error extracting text from HTML:', error)
-    throw new Error('Failed to extract text from the webpage')
+
+    if (error instanceof Error && error.message.includes('Could not extract sufficient')) {
+      throw error
+    }
+
+    throw new Error('Failed to extract readable text from the webpage. The page may use complex formatting or be protected from automated access.')
   }
 }
 
@@ -119,7 +157,7 @@ export async function POST(request: NextRequest) {
 
     if (!extractedText || extractedText.length < 50) {
       return NextResponse.json(
-        { error: 'Unable to extract sufficient content from the provided URL' },
+        { error: 'Unable to extract sufficient readable content from the provided URL. The page may be image-heavy, use complex formatting, or be protected from automated access.' },
         { status: 400 }
       )
     }
