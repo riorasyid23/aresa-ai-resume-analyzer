@@ -36,17 +36,26 @@ export default function Results() {
     )
   }
 
+  console.log('Results page - currentAnalysis:', currentAnalysis)
+  console.log('Results page - result object:', currentAnalysis)
+
   const result = currentAnalysis
 
   // Check if the result has an error or missing required properties
   if (result?.error || !Array.isArray(result.strengths) || !Array.isArray(result.weaknesses) || !Array.isArray(result.improvements)) {
+    console.log('Results validation failed:')
+    console.log('- result?.error:', result?.error)
+    console.log('- result.strengths:', result.strengths, 'isArray:', Array.isArray(result.strengths))
+    console.log('- result.weaknesses:', result.weaknesses, 'isArray:', Array.isArray(result.weaknesses))
+    console.log('- result.improvements:', result.improvements, 'isArray:', Array.isArray(result.improvements))
+
     return (
       <div className="text-center">
         <p className="text-red-600 mb-4">
           {result?.error || 'Analysis failed or returned invalid data. Please check the console for details.'}
         </p>
         <p className="text-gray-600 text-sm mb-4">
-          Debug info: success={result.success}, hasStrengths={Array.isArray(result.strengths)}, hasWeaknesses={Array.isArray(result.weaknesses)}, hasImprovements={Array.isArray(result.improvements)}
+          Debug info: success={result?.success}, hasStrengths={Array.isArray(result?.strengths)}, hasWeaknesses={Array.isArray(result?.weaknesses)}, hasImprovements={Array.isArray(result?.improvements)}
         </p>
         <Link href="/" className="text-blue-600 hover:text-blue-800">
           Go back to upload

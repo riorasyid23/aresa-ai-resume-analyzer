@@ -1,8 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useAnalysisStore } from '@/lib/store'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -19,13 +18,53 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Trash2, Eye, Plus, Calendar, FileText, CheckCircle, AlertCircle, Lightbulb } from 'lucide-react'
+import { Trash2, Eye, Plus, Calendar, FileText, CheckCircle, AlertCircle, Lightbulb, RefreshCw } from 'lucide-react'
+
+interface AnalysisHistory {
+  id: string
+  userId: string
+  inputText: string
+  outputText: string
+  creditCost: number
+  createdAt: number
+}
 
 export default function History() {
-  const { history, removeFromHistory, clearHistory, setCurrentAnalysisFromHistory } = useAnalysisStore()
+  const [history, setHistory] = useState<AnalysisHistory[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchHistory()
+  }, [])
+
+  const fetchHistory = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const response = await fetch('/api/analysis')
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch analysis history')
+      }
+
+      setHistory(data)
+    } catch (err) {
+      console.error('Error fetching history:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load history')
+      toast.error("Failed to load history", {
+        description: "Unable to fetch your analysis history. Please try again.",
+        richColors: true
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString()
+    return new Date(timestamp * 1000).toLocaleString() // Convert Unix timestamp to milliseconds
   }
 
   const getScoreColor = (score: number) => {
@@ -40,30 +79,60 @@ export default function History() {
     return 'bg-red-100'
   }
 
-  const viewAnalysis = (analysis: any) => {
-    setCurrentAnalysisFromHistory(analysis)
+  // For now, we'll show a simple view since we don't have the full analysis details from the backend
+  // In a real implementation, you might want to store more details or fetch individual analyses
+  const viewAnalysis = (analysis: AnalysisHistory) => {
+    toast.info("Analysis Details", {
+      description: `Analysis from ${formatDate(analysis.createdAt)}`,
+      richColors: true
+    })
   }
 
-  const handleDeleteAnalysis = async (index: number, analysis: any) => {
-    try {
-      // Get analysis type for the toast message
-      const analysisType = analysis.type === 'portfolio' ? 'Portfolio analysis' : 'Resume analysis'
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">ARESA Analysis History</h1>
+          <p className="text-muted-foreground">Loading your analysis history...</p>
+        </div>
 
-      // Remove from history
-      removeFromHistory(index)
+        <Card className="text-center py-12">
+          <CardContent>
+            <div className="flex flex-col items-center space-y-4">
+              <RefreshCw className="w-8 h-8 text-gray-400 animate-spin" />
+              <p className="text-muted-foreground">Fetching your analysis history...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
-      // Show success toast
-      toast.success(`${analysisType} deleted successfully`, {
-        description: "The analysis has been removed from your history.",
-        richColors: true
-      })
-    } catch (error) {
-      console.error('Error deleting analysis:', error)
-      toast.error("Failed to delete analysis", {
-        description: "An error occurred while deleting the analysis. Please try again.",
-        richColors: true
-      })
-    }
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">ARESA Analysis History</h1>
+          <p className="text-muted-foreground">Error loading analysis history</p>
+        </div>
+
+        <Card className="text-center py-12 border-red-200">
+          <CardContent>
+            <div className="flex flex-col items-center space-y-4">
+              <AlertCircle className="w-8 h-8 text-red-400" />
+              <div>
+                <CardTitle className="text-lg mb-2 text-red-600">Failed to Load History</CardTitle>
+                <p className="text-muted-foreground mb-6">{error}</p>
+              </div>
+              <Button onClick={fetchHistory} variant="outline">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   if (history.length === 0) {
@@ -87,7 +156,7 @@ export default function History() {
                 </p>
               </div>
               <Button asChild size="lg">
-                <Link href="/">
+                <Link href="/playground">
                   <Plus className="w-4 h-4 mr-2" />
                   Start New Analysis
                 </Link>
@@ -111,188 +180,83 @@ export default function History() {
         </div>
         <div className="flex gap-3">
           <Button asChild variant="default">
-            <Link href="/">
+            <Link href="/playground">
               <Plus className="w-4 h-4 mr-2" />
               New Analysis
             </Link>
           </Button>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Clear History
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Clear All History?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete all your analysis history
-                  and remove all stored data from your browser.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => {
-                    try {
-                      clearHistory()
-                      toast.success("History cleared successfully", {
-                        description: "All analysis history has been removed.",
-                        duration: 3000,
-                      })
-                    } catch (error) {
-                      console.error('Error clearing history:', error)
-                      toast.error("Failed to clear history", {
-                        description: "An error occurred while clearing your history. Please try again.",
-                        duration: 4000,
-                      })
-                    }
-                  }}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  Clear All History
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <Button onClick={fetchHistory} variant="outline">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
         </div>
       </div>
 
       <Separator className="mb-8" />
 
       <div className="grid gap-6">
-        {history.map((analysis, index) => (
-          <Card key={index} className="hover:shadow-lg transition-shadow">
+        {history.map((analysis) => (
+          <Card key={analysis.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                  <div className={`w-14 h-14 rounded-full ${getScoreBg(analysis.score)} flex items-center justify-center border-2 border-white shadow-sm`}>
-                    <span className={`text-2xl font-bold ${getScoreColor(analysis.score)}`}>
-                      {analysis.score}
-                    </span>
+                  <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center border-2 border-white shadow-sm">
+                    <FileText className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
                     <CardTitle className="text-xl mb-1">
-                      {analysis.type === 'portfolio' ? 'Portfolio Analysis' : 'Resume Analysis'}
+                      Resume Analysis
                     </CardTitle>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
-                        {formatDate(analysis.timestamp)}
+                        {formatDate(analysis.createdAt)}
                       </div>
-                      {analysis.filename && (
-                        <div className="flex items-center gap-1">
-                          <FileText className="w-4 h-4" />
-                          {analysis.filename}
-                        </div>
-                      )}
-                      {analysis.portfolioUrl && (
-                        <div className="flex items-center gap-1">
-                          <Badge variant="secondary" className="text-xs">
-                            Portfolio
-                          </Badge>
-                        </div>
-                      )}
-                    </div>
-                    <div className="mt-2">
-                      <Badge variant={analysis.score >= 80 ? "default" : analysis.score >= 60 ? "secondary" : "destructive"}>
-                        {analysis.score >= 80 ? "Excellent" : analysis.score >= 60 ? "Good" : "Needs Improvement"}
-                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className="text-xs">
+                          {Math.abs(analysis.creditCost)} credits
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex gap-2">
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={analysis.type === 'portfolio' ? '/portfolio-results' : '/results'} onClick={() => viewAnalysis(analysis)}>
-                      <Eye className="w-4 h-4 mr-2" />
-                      View
-                    </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => viewAnalysis(analysis)}
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    View Details
                   </Button>
-
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Analysis?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will permanently delete this analysis from your history. This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDeleteAnalysis(index, analysis)}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          Delete Analysis
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
                 </div>
               </div>
             </CardHeader>
 
             <CardContent>
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <h4 className="font-medium text-green-700">Strengths</h4>
-                    <Badge variant="outline" className="text-xs">{analysis.strengths.length}</Badge>
-                  </div>
-                  <ul className="text-sm text-muted-foreground space-y-1 pl-6">
-                    {analysis.strengths.slice(0, 2).map((strength, i) => (
-                      <li key={i} className="truncate">• {strength}</li>
-                    ))}
-                    {analysis.strengths.length > 2 && (
-                      <li className="text-muted-foreground text-xs">+{analysis.strengths.length - 2} more</li>
-                    )}
-                  </ul>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-2">Analysis Input:</h4>
+                  <p className="text-sm text-muted-foreground bg-gray-50 p-3 rounded-md line-clamp-2">
+                    {analysis.inputText}
+                  </p>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-red-600" />
-                    <h4 className="font-medium text-red-700">Areas for Improvement</h4>
-                    <Badge variant="outline" className="text-xs">{(analysis.weaknesses || []).length}</Badge>
-                  </div>
-                  <ul className="text-sm text-muted-foreground space-y-1 pl-6">
-                    {(analysis.weaknesses || []).slice(0, 2).map((weakness, i) => (
-                      <li key={i} className="truncate">• {weakness}</li>
-                    ))}
-                    {(analysis.weaknesses || []).length > 2 && (
-                      <li className="text-muted-foreground text-xs">+{(analysis.weaknesses || []).length - 2} more</li>
-                    )}
-                  </ul>
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-2">Analysis Output:</h4>
+                  <p className="text-sm text-muted-foreground bg-gray-50 p-3 rounded-md line-clamp-3">
+                    {analysis.outputText}
+                  </p>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Lightbulb className="w-4 h-4 text-blue-600" />
-                    <h4 className="font-medium text-blue-700">Recommendations</h4>
-                    <Badge variant="outline" className="text-xs">{(analysis.improvements || []).length}</Badge>
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    ID: {analysis.id}
                   </div>
-                  <ul className="text-sm text-muted-foreground space-y-1 pl-6">
-                    {(analysis.improvements || []).slice(0, 2).map((improvement, i) => (
-                      <li key={i} className="truncate">• {improvement}</li>
-                    ))}
-                    {(analysis.improvements || []).length > 2 && (
-                      <li className="text-muted-foreground text-xs">+{(analysis.improvements || []).length - 2} more</li>
-                    )}
-                  </ul>
+                  <Badge variant="secondary">
+                    {new Date(analysis.createdAt * 1000).toLocaleDateString()}
+                  </Badge>
                 </div>
               </div>
             </CardContent>

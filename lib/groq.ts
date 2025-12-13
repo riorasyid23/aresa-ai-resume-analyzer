@@ -71,13 +71,14 @@ Guidelines for analysis:
     const cleanedContent = rawContent.replace(/```json\s*|\s*```/g, '').trim()
     const content = JSON.parse(cleanedContent)
 
+    // Ensure all required fields exist, provide defaults for missing ones
     return {
       success: true,
-      score: content.score,
-      strengths: content.strengths,
-      weaknesses: content.weaknesses,
-      improvements: content.improvements,
-      rewritten_summary: content.rewritten_summary,
+      score: content.score || 0,
+      strengths: Array.isArray(content.strengths) ? content.strengths : [],
+      weaknesses: Array.isArray(content.weaknesses) ? content.weaknesses : [],
+      improvements: Array.isArray(content.improvements) ? content.improvements : [],
+      rewritten_summary: content.rewritten_summary || '',
     }
   } catch (error) {
     console.error('Error analyzing resume:', error)

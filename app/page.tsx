@@ -1,474 +1,247 @@
-'use client'
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import {
+  CheckCircle,
+  FileText,
+  TrendingUp,
+  Users,
+  Sparkles,
+  Shield,
+  Zap,
+  Target,
+  ArrowRight,
+  Upload,
+  Brain,
+  BarChart3
+} from "lucide-react"
 
-import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAnalysisStore } from '@/lib/store'
-import { useToast } from '@/hooks/use-toast'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { AlertTriangle, ExternalLink, RefreshCw, X, Upload, FileText, Link } from 'lucide-react'
-import { toast } from 'sonner'
-
-export default function Home() {
-  const [resumeText, setResumeText] = useState('')
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [portfolioUrl, setPortfolioUrl] = useState('')
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [loadingStep, setLoadingStep] = useState('')
-  const [errorMessage, setErrorMessage] = useState('')
-  const router = useRouter()
-  const setCurrentAnalysis = useAnalysisStore((state) => state.setCurrentAnalysis)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [isDragOver, setIsDragOver] = useState(false)
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-      const allowedExtensions = ['.pdf', '.docx']
-      const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'))
-
-      if (allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension)) {
-        setSelectedFile(file)
-        setResumeText('') // Clear text when file is selected
-        setPortfolioUrl('') // Clear URL when file is selected
-      }
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    // Determine which type of analysis to perform
-    const isPortfolioAnalysis = portfolioUrl.trim() !== '' && !selectedFile && !resumeText.trim()
-
-    if (!selectedFile && !resumeText.trim() && !isPortfolioAnalysis) {
-      toast.error("Input Required", {
-        description: "Please upload a PDF, DOCX, paste your resume text, or enter a portfolio URL",
-        richColors: true,
-        duration: 4000,
-      })
-      return
-    }
-
-    if (isPortfolioAnalysis) {
-      const trimmedUrl = portfolioUrl.trim()
-      console.log('Validating portfolio URL:', trimmedUrl)
-      if (!trimmedUrl) {
-        toast.error("Portfolio URL Required", {
-          description: "Please enter a portfolio URL to analyze",
-          richColors: true,
-          duration: 4000,
-        })
-        return
-      }
-      if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
-        toast.error("Invalid URL Format", {
-          description: "Please enter a valid URL starting with http:// or https://",
-          richColors: true,
-          duration: 4000,
-        })
-        return
-      }
-      // Basic URL validation
-      try {
-        new URL(trimmedUrl)
-      } catch {
-        toast.error("Invalid URL", {
-          description: "Please enter a valid URL format",
-          richColors: true,
-          duration: 4000,
-        })
-        return
-      }
-    }
-
-    setIsAnalyzing(true)
-    setLoadingStep('Extracting text from your resume...')
-    setErrorMessage('') // Clear any previous errors
-
-    try {
-      if (isPortfolioAnalysis) {
-        // Portfolio analysis
-        setLoadingStep('Fetching portfolio content...')
-
-        const response = await fetch('/api/analyze-portfolio', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ url: portfolioUrl.trim() }),
-        })
-
-        if (!response.ok) {
-          throw new Error('Portfolio analysis failed: ' + response.statusText)
-        }
-
-        setLoadingStep('Analyzing portfolio and generating insights...')
-
-        const result = await response.json()
-        if(!result.success) {
-          throw new Error('Portfolio analysis failed')
-        }
-
-        console.log('Portfolio analysis successful, storing data...')
-        const analysisWithMetadata = {
-          ...result,
-          timestamp: Date.now(),
-          portfolioUrl: portfolioUrl.trim(),
-          type: 'portfolio'
-        }
-
-        setCurrentAnalysis(analysisWithMetadata)
-        console.log('Data stored, navigating to /portfolio-results...')
-        router.push('/portfolio-results')
-      } else {
-        // Resume analysis (existing logic)
-        setLoadingStep('Extracting text from your resume...')
-
-        const formData = new FormData()
-        if (selectedFile) {
-          formData.append('file', selectedFile)
-        } else {
-          formData.append('text', resumeText)
-        }
-
-        setLoadingStep('Sending resume to AI analysis...')
-
-        const response = await fetch('/api/analyze', {
-          method: 'POST',
-          body: formData,
-        })
-
-        if (!response.ok) {
-          throw new Error('Analysis failed: ' + response.statusText)
-        }
-
-        setLoadingStep('Analyzing content and generating insights...')
-
-        const result = await response.json()
-        if(!result.success) {
-          throw new Error('Analysis failed')
-        }
-
-        console.log('Analysis successful, storing data...')
-        const analysisWithMetadata = {
-          ...result,
-          timestamp: Date.now(),
-          resumeText: selectedFile ? undefined : resumeText,
-          filename: selectedFile?.name,
-          type: 'resume'
-        }
-
-        setCurrentAnalysis(analysisWithMetadata)
-        console.log('Data stored, navigating to /results...')
-        router.push('/results')
-      }
-    } catch (error) {
-      console.error('Error in handleSubmit:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      setErrorMessage(errorMessage)
-      toast.error("Analysis Failed", {
-        description: errorMessage,
-        richColors: true,
-        duration: 6000,
-      })
-    } finally {
-      console.log('Finally block executed, resetting loading state')
-      setIsAnalyzing(false)
-      setLoadingStep('')
-    }
-  }
-
+export default function LandingPage() {
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          ARESA
-        </h1>
-        <h2 className="text-2xl font-semibold text-blue-600 dark:text-blue-400 mb-2">
-          AI Resume Analyzer
-        </h2>
-        <p className="text-gray-600 dark:text-gray-300 text-lg max-w-2xl mx-auto">
-          Transform your resume with intelligent AI-powered analysis. Get comprehensive feedback, scoring, and actionable recommendations to land more interviews.
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+      {/* Hero Section */}
+      <section className="container mx-auto px-4 py-16 md:py-24">
+        <div className="text-center max-w-4xl mx-auto">
+          <Badge variant="secondary" className="mb-4 px-4 py-2 text-sm font-medium">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Powered by AI & Cloudflare
+          </Badge>
 
-      {errorMessage && (
-        <Alert variant="destructive" className="mb-6 border-red-200 bg-red-50/50 relative animate-in slide-in-from-top-2 duration-300">
-          <AlertTriangle className="h-4 w-4" />
-          <button
-            onClick={() => setErrorMessage('')}
-            className="absolute top-3 right-3 text-red-600 hover:text-red-800 transition-colors"
-            aria-label="Dismiss error"
-          >
-            <X className="h-4 w-4" />
-          </button>
-          <AlertTitle className="text-red-800 font-semibold pr-8">
-            Portfolio Analysis Failed
-          </AlertTitle>
-          <AlertDescription className="text-red-700 mt-2">
-            <div className="space-y-2">
-              <p className="font-medium">Unable to access the portfolio URL you provided.</p>
-              <div className="text-sm space-y-1">
-                <p className="flex items-start gap-2">
-                  <span className="text-red-600 mt-0.5">•</span>
-                  <span>{errorMessage}</span>
-                </p>
-              </div>
-              <div className="bg-red-100/70 rounded-md p-3 mt-3 border border-red-200/50">
-                <p className="text-sm font-medium text-red-800 mb-2">💡 Suggestions:</p>
-                <ul className="text-sm space-y-1 text-red-700">
-                  <li className="flex items-center gap-2">
-                    <ExternalLink className="h-3 w-3" />
-                    Check if the URL is correct and publicly accessible
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <RefreshCw className="h-3 w-3" />
-                    Try a different portfolio URL (GitHub, personal website, etc.)
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-red-400"></span>
-                    Some sites may block automated access
-                  </li>
-                </ul>
-              </div>
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+            Transform Your Resume with
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+              {" "}AI Intelligence
+            </span>
+          </h1>
+
+          <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+            Get comprehensive AI-powered feedback, scoring, and actionable recommendations
+            to land more interviews and accelerate your career growth.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            <Link href="/login">
+              <Button size="lg" className="text-lg px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                <Upload className="w-5 h-5 mr-2" />
+                Get Started - Analyze Resume
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
+            <Link href="/login">
+              <Button variant="outline" size="lg" className="text-lg px-8 py-3">
+                Sign In
+              </Button>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">10M+</div>
+              <div className="text-gray-600 dark:text-gray-400">Resumes Analyzed</div>
             </div>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Tabs defaultValue="upload" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="upload" className="flex items-center gap-2">
-              <Upload className="h-4 w-4" />
-              <span className="hidden sm:inline">Upload File</span>
-              <span className="sm:hidden">File</span>
-            </TabsTrigger>
-            <TabsTrigger value="text" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Paste Text</span>
-              <span className="sm:hidden">Text</span>
-            </TabsTrigger>
-            <TabsTrigger value="portfolio" className="flex items-center gap-2">
-              <Link className="h-4 w-4" />
-              <span className="hidden sm:inline">Portfolio</span>
-              <span className="sm:hidden">URL</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="upload" className="mt-6">
-            <Card className="border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors">
-              <CardHeader className="text-center pb-3">
-                <CardTitle className="flex items-center justify-center gap-2 text-foreground">
-                  <Upload className="h-5 w-5" />
-                  Upload Resume File
-                </CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  PDF or DOCX files supported • Drag & drop or click to browse
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-4">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.docx"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    id="file-upload"
-                    disabled={isAnalyzing}
-                  />
-                  <Label
-                    htmlFor="file-upload"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      fileInputRef.current?.click()
-                    }}
-                    onDragOver={(e) => {
-                      e.preventDefault()
-                      setIsDragOver(true)
-                    }}
-                    onDragLeave={(e) => {
-                      e.preventDefault()
-                      setIsDragOver(false)
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault()
-                      setIsDragOver(false)
-                      const files = e.dataTransfer.files
-                      if (files.length > 0) {
-                        const file = files[0]
-                        const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-                        const allowedExtensions = ['.pdf', '.docx']
-                        const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'))
-
-                        if (allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension)) {
-                          setSelectedFile(file)
-                          setResumeText('')
-                          setPortfolioUrl('')
-                        } else {
-                          toast.error("Invalid file type", {
-                            description: "Please upload a PDF or DOCX file",
-                            richColors: true,
-                          })
-                        }
-                      }
-                    }}
-                    className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200 ${
-                      isDragOver
-                        ? 'border-blue-500 bg-blue-50/70 scale-105'
-                        : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50/50'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload className={`w-8 h-8 mb-3 transition-colors ${
-                        isDragOver ? 'text-blue-500' : 'text-gray-400'
-                      }`} />
-                      <p className="mb-2 text-sm text-muted-foreground text-center">
-                        <span className="font-semibold text-foreground">
-                          {isDragOver ? 'Drop your file here' : 'Click to upload'}
-                        </span>{' '}
-                        {!isDragOver && 'or drag and drop'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">PDF, DOCX (MAX. 10MB)</p>
-                    </div>
-                  </Label>
-                  {selectedFile && (
-                    <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <FileText className="h-5 w-5 text-green-600" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-green-800">{selectedFile.name}</p>
-                        <p className="text-xs text-green-600">
-                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="text" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-700">
-                  <FileText className="h-5 w-5" />
-                  Paste Resume Text
-                </CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  Copy and paste your resume content directly from any document
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={resumeText}
-                  onChange={(e) => {
-                    setResumeText(e.target.value)
-                    setSelectedFile(null) // Clear file when text is entered
-                    setPortfolioUrl('') // Clear URL when text is entered
-                  }}
-                  placeholder="Paste your resume text here...&#10;&#10;Tip: Copy from your existing resume or LinkedIn profile"
-                  rows={10}
-                  disabled={isAnalyzing}
-                  className="resize-none"
-                />
-                {resumeText && (
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-sm text-muted-foreground">
-                      {resumeText.length} characters
-                    </p>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      resumeText.length > 1000 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300' : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
-                    }`}>
-                      {resumeText.length > 1000 ? 'Good length' : 'Add more content'}
-                    </span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="portfolio" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-foreground">
-                  <Link className="h-5 w-5" />
-                  Analyze Portfolio/Website
-                </CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  Get insights on your online presence, projects, and professional branding
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Input
-                      type="url"
-                      value={portfolioUrl}
-                      onChange={(e) => {
-                        setPortfolioUrl(e.target.value)
-                        setSelectedFile(null) // Clear file when URL is entered
-                        setResumeText('') // Clear text when URL is entered
-                      }}
-                      placeholder="https://your-portfolio.com or https://github.com/yourusername"
-                      disabled={isAnalyzing}
-                    />
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <ExternalLink className="h-3 w-3" />
-                      Supports GitHub, personal websites, LinkedIn profiles, and portfolios
-                    </p>
-                  </div>
-                  {portfolioUrl && (
-                    <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <ExternalLink className="h-5 w-5 text-blue-600" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-blue-800 truncate">{portfolioUrl}</p>
-                        <p className="text-xs text-blue-600">Ready for analysis</p>
-                      </div>
-                    </div>
-                  )}
-                  <div className="bg-muted/50 border border-border rounded-lg p-4">
-                    <h4 className="text-sm font-medium text-foreground mb-2">What we'll analyze:</h4>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• Content quality and presentation</li>
-                      <li>• Project showcase and descriptions</li>
-                      <li>• Skills and technologies displayed</li>
-                      <li>• Overall design and user experience</li>
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {isAnalyzing && (
-          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <div className="flex items-center gap-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-              <div>
-                <p className="text-blue-800 font-medium">Analyzing your resume...</p>
-                <p className="text-blue-600 text-sm">{loadingStep || 'This may take a few moments'}</p>
-              </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">98%</div>
+              <div className="text-gray-600 dark:text-gray-400">Success Rate</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">24/7</div>
+              <div className="text-gray-600 dark:text-gray-400">AI Availability</div>
             </div>
           </div>
-        )}
+        </div>
+      </section>
 
-        <button
-          type="submit"
-          disabled={isAnalyzing || (!selectedFile && !resumeText.trim() && !portfolioUrl.trim())}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isAnalyzing && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
-          {isAnalyzing ? 'Analyzing...' : 'Analyze'}
-        </button>
-      </form>
+      {/* Features Section */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Why Choose ARESA?
+          </h2>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Advanced AI technology meets practical career advice to give you the edge you need.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mb-4">
+                <Brain className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <CardTitle className="text-xl">AI-Powered Analysis</CardTitle>
+              <CardDescription>
+                Advanced machine learning algorithms analyze your resume against industry standards and job requirements.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center mb-4">
+                <BarChart3 className="w-6 h-6 text-green-600 dark:text-green-400" />
+              </div>
+              <CardTitle className="text-xl">Comprehensive Scoring</CardTitle>
+              <CardDescription>
+                Get detailed scores for content quality, formatting, keywords, and industry relevance with specific improvement suggestions.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center mb-4">
+                <Target className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <CardTitle className="text-xl">Actionable Insights</CardTitle>
+              <CardDescription>
+                Receive specific, actionable recommendations to improve your resume and increase your chances of getting interviews.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center mb-4">
+                <Zap className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+              </div>
+              <CardTitle className="text-xl">Instant Results</CardTitle>
+              <CardDescription>
+                Get comprehensive analysis and feedback in seconds, not days. Fast, efficient, and always available.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center mb-4">
+                <Shield className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <CardTitle className="text-xl">Secure & Private</CardTitle>
+              <CardDescription>
+                Your resume data is encrypted and processed securely. We never store or share your personal information.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader>
+              <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/20 rounded-lg flex items-center justify-center mb-4">
+                <Users className="w-6 h-6 text-teal-600 dark:text-teal-400" />
+              </div>
+              <CardTitle className="text-xl">Industry Expertise</CardTitle>
+              <CardDescription>
+                Trained on millions of successful resumes across all industries to provide the most relevant and accurate feedback.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="bg-white dark:bg-gray-800 py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              How It Works
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300">
+              Get professional resume analysis in three simple steps
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-white text-2xl font-bold">1</span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Upload Your Resume</h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Upload a PDF/DOCX file, paste your resume text, or provide a portfolio URL for comprehensive analysis.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-white text-2xl font-bold">2</span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">AI Analysis</h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Our advanced AI analyzes content quality, formatting, keywords, and industry relevance in real-time.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-white text-2xl font-bold">3</span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Get Insights</h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Receive detailed scoring, specific recommendations, and actionable steps to improve your resume.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="container mx-auto px-4 py-16">
+        <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 border-0 text-white">
+          <CardContent className="p-8 md:p-12 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Ready to Transform Your Resume?
+            </h2>
+            <p className="text-xl mb-8 text-blue-100">
+              Join thousands of professionals who have improved their career prospects with ARESA's AI-powered analysis.
+            </p>
+            <Link href="/login">
+              <Button size="lg" variant="secondary" className="text-lg px-8 py-3">
+                <FileText className="w-5 h-5 mr-2" />
+                Start Your Analysis Now
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-8">
+        <div className="container mx-auto px-4 text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <FileText className="w-5 h-5" />
+            </div>
+            <span className="text-xl font-bold">ARESA</span>
+          </div>
+          <p className="text-gray-400 mb-4">
+            AI Resume Analyzer • Powered by Cloudflare Workers & Groq AI
+          </p>
+          <p className="text-sm text-gray-500">
+            © 2025 ARESA. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }
