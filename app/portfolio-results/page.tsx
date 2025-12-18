@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Coins, Info } from 'lucide-react'
 
 export default function PortfolioResults() {
   const router = useRouter()
@@ -45,7 +47,7 @@ export default function PortfolioResults() {
           {result?.error || 'Analysis failed or returned invalid data. Please check the console for details.'}
         </p>
         <p className="text-gray-600 text-sm mb-4">
-          Debug info: success={result.success}, hasStrengths={Array.isArray(result.strengths)}, hasWeaknesses={Array.isArray(result.weaknesses)}, hasImprovements={Array.isArray(result.improvements)}
+          Debug info: success={result.success ? 'true' : 'false'}
         </p>
         <Link href="/" className="text-blue-600 hover:text-blue-800">
           Go back to analysis
@@ -96,6 +98,23 @@ export default function PortfolioResults() {
         </Link>
       </div>
 
+      {/* Credit Usage Info */}
+      {result.creditsDeducted !== undefined && (
+        <Alert className="mb-6 bg-blue-50 border-blue-200">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertTitle className="text-blue-800">Analysis Complete</AlertTitle>
+          <AlertDescription className="text-blue-700 flex items-center gap-4 mt-2">
+            <span className="flex items-center gap-1.5">
+              <Coins className="h-4 w-4" />
+              Credits used: <span className="font-medium">{result.creditsDeducted}</span>
+              {result.creditsRemaining !== undefined && (
+                <span className="opacity-80">(Remaining: {result.creditsRemaining})</span>
+              )}
+            </span>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Portfolio Score */}
       <Card className="mb-6">
         <CardHeader className="text-center">
@@ -119,8 +138,8 @@ export default function PortfolioResults() {
         <CardContent className="text-center">
           <p className="text-muted-foreground">
             {result.score >= 80 ? 'Excellent portfolio!' :
-             result.score >= 60 ? 'Good portfolio with room for improvement' :
-             'Portfolio needs significant improvements'}
+              result.score >= 60 ? 'Good portfolio with room for improvement' :
+                'Portfolio needs significant improvements'}
           </p>
         </CardContent>
       </Card>

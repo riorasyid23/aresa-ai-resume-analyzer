@@ -8,14 +8,14 @@ import { useToast } from '@/hooks/use-toast'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlertTriangle, ExternalLink, RefreshCw, X, Upload, FileText, Link } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function AnalyzePage() {
-  const [resumeText, setResumeText] = useState('')
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [portfolioUrl, setPortfolioUrl] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -35,7 +35,7 @@ export default function AnalyzePage() {
 
       if (allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension)) {
         setSelectedFile(file)
-        setResumeText('') // Clear text when file is selected
+
         setPortfolioUrl('') // Clear URL when file is selected
       }
     }
@@ -45,16 +45,17 @@ export default function AnalyzePage() {
     e.preventDefault()
 
     // Determine which type of analysis to perform
-    const isPortfolioAnalysis = portfolioUrl.trim() !== '' && !selectedFile && !resumeText.trim()
+    const isPortfolioAnalysis = portfolioUrl.trim() !== '' && !selectedFile
 
-    if (!selectedFile && !resumeText.trim() && !isPortfolioAnalysis) {
+    if (!selectedFile && !isPortfolioAnalysis) {
       toast.error("Input Required", {
-        description: "Please upload a PDF, DOCX, paste your resume text, or enter a portfolio URL",
+        description: "Please upload a PDF or DOCX file, or enter a portfolio URL to analyze",
         richColors: true,
         duration: 4000,
       })
       return
     }
+
 
     if (isPortfolioAnalysis) {
       const trimmedUrl = portfolioUrl.trim()
@@ -112,56 +113,9 @@ export default function AnalyzePage() {
         setLoadingStep('Analyzing portfolio and generating insights...')
 
         const result = await response.json()
-        if(!result.success) {
+        if (!result.success) {
           throw new Error('Portfolio analysis failed')
         }
-
-        // Save portfolio analysis result to backend and deduct credits
-        // Temporarily disabled for debugging
-        /*
-        setLoadingStep('Saving analysis results...')
-        const analysisData = {
-          prompt: `Analyze portfolio/website: ${portfolioUrl.trim()}`,
-          output: result.analysis || result.feedback || JSON.stringify(result)
-        }
-
-        try {
-          const analysisResponse = await fetch('/api/analysis', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(analysisData),
-          })
-
-          const analysisResult = await analysisResponse.json()
-
-          if (!analysisResponse.ok) {
-            if (analysisResult.error?.includes('Insufficient credits')) {
-              throw new Error('Insufficient credits. Please contact support to purchase more credits.')
-            }
-            throw new Error(analysisResult.error || 'Failed to save analysis results')
-          }
-
-          console.log('Portfolio analysis saved successfully, credits deducted:', analysisResult.creditsDeducted)
-
-          // Update the result with credits information
-          result.creditsDeducted = analysisResult.creditsDeducted
-          result.creditsRemaining = analysisResult.creditsRemaining
-
-          // Refresh session to update credits display
-          await update()
-
-        } catch (error) {
-          console.error('Failed to save portfolio analysis:', error)
-          // Continue with the flow but log the error
-          toast.error("Portfolio analysis completed but failed to save results", {
-            description: "Your analysis was successful but couldn't be saved. Credits may not have been deducted.",
-            richColors: true,
-            duration: 5000,
-          })
-        }
-        */
 
         console.log('Portfolio analysis successful, storing data...')
         const analysisWithMetadata = {
@@ -175,100 +129,44 @@ export default function AnalyzePage() {
         console.log('Data stored, navigating to /portfolio-results...')
         router.push('/portfolio-results')
       } else {
-        // Resume analysis (existing logic)
-        setLoadingStep('Extracting text from your resume...')
-
-        const formData = new FormData()
-        if (selectedFile) {
-          formData.append('file', selectedFile)
-        } else {
-          formData.append('text', resumeText)
+        // Resume analysis using backend API via store
+        if (!selectedFile) {
+          throw new Error('Please upload a PDF or DOCX file to analyze')
         }
 
-        setLoadingStep('Sending resume to AI analysis...')
+        setLoadingStep('Uploading file to server...')
 
-        const response = await fetch('/api/analyze', {
-          method: 'POST',
-          body: formData,
-        })
+        // Use the store's analyzeResumeFile function
+        const analyzeResumeFile = useAnalysisStore.getState().analyzeResumeFile
 
-        if (!response.ok) {
-          throw new Error('Analysis failed: ' + response.statusText)
+        setLoadingStep('Analyzing content with AI...')
+
+        const result = await analyzeResumeFile(selectedFile, 'resume')
+
+        // Check for errors in the result
+        if (!result.success || result.error) {
+          throw new Error(result.error || 'Analysis failed')
         }
-
-        setLoadingStep('Analyzing content and generating insights...')
-
-        const result = await response.json()
-        if(!result.success) {
-          throw new Error('Analysis failed')
-        }
-
-        // Save analysis result to backend and deduct credits
-        // Temporarily disabled for debugging
-        /*
-        setLoadingStep('Saving analysis results...')
-        const analysisData = {
-          prompt: selectedFile ? `Analyze resume file: ${selectedFile.name}` : `Analyze resume text: ${resumeText.substring(0, 100)}...`,
-          output: result.analysis || result.feedback || JSON.stringify(result)
-        }
-
-        try {
-          const analysisResponse = await fetch('/api/analysis', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(analysisData),
-          })
-
-          const analysisResult = await analysisResponse.json()
-
-          if (!analysisResponse.ok) {
-            if (analysisResult.error?.includes('Insufficient credits')) {
-              throw new Error('Insufficient credits. Please contact support to purchase more credits.')
-            }
-            throw new Error(analysisResult.error || 'Failed to save analysis results')
-          }
-
-          console.log('Analysis saved successfully, credits deducted:', analysisResult.creditsDeducted)
-
-          // Update the result with credits information
-          result.creditsDeducted = analysisResult.creditsDeducted
-          result.creditsRemaining = analysisResult.creditsRemaining
-
-          // Refresh session to update credits display
-          await update()
-
-        } catch (error) {
-          console.error('Failed to save analysis:', error)
-          // Continue with the flow but log the error
-          toast.error("Analysis completed but failed to save results", {
-            description: "Your analysis was successful but couldn't be saved. Credits may not have been deducted.",
-            richColors: true,
-            duration: 5000,
-          })
-        }
-        */
 
         console.log('Analysis successful, storing data...')
         console.log('Result object:', result)
-        console.log('Result success:', result.success)
-        console.log('Result strengths:', result.strengths)
-        console.log('Result weaknesses:', result.weaknesses)
-        console.log('Result improvements:', result.improvements)
+        console.log('Credits deducted:', result.creditsDeducted)
+        console.log('Credits remaining:', result.creditsRemaining)
 
-        const analysisWithMetadata = {
-          ...result,
-          timestamp: Date.now(),
-          resumeText: selectedFile ? undefined : resumeText,
-          filename: selectedFile?.name,
-          type: 'resume'
+        // Refresh session to update credits display
+        if (result.creditsRemaining !== undefined) {
+          await update()
         }
 
-        console.log('Analysis with metadata:', analysisWithMetadata)
-        setCurrentAnalysis(analysisWithMetadata)
-        console.log('Data stored, navigating to /results...')
-        router.push('/results')
+        setCurrentAnalysis(result)
+
+        if (result.id) {
+          console.log(`Data stored, navigating to /results/${result.id}...`)
+          router.push(`/results/${result.id}`)
+        } else {
+          console.log('Data stored (no ID), navigating to /results...')
+          router.push('/results')
+        }
       }
     } catch (error) {
       console.error('Error in handleSubmit:', error)
@@ -346,16 +244,11 @@ export default function AnalyzePage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Tabs defaultValue="upload" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="upload" className="flex items-center gap-2">
               <Upload className="h-4 w-4" />
               <span className="hidden sm:inline">Upload File</span>
               <span className="sm:hidden">File</span>
-            </TabsTrigger>
-            <TabsTrigger value="text" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Paste Text</span>
-              <span className="sm:hidden">Text</span>
             </TabsTrigger>
             <TabsTrigger value="portfolio" className="flex items-center gap-2">
               <Link className="h-4 w-4" />
@@ -412,7 +305,7 @@ export default function AnalyzePage() {
 
                         if (allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension)) {
                           setSelectedFile(file)
-                          setResumeText('')
+
                           setPortfolioUrl('')
                         } else {
                           toast.error("Invalid file type", {
@@ -422,16 +315,14 @@ export default function AnalyzePage() {
                         }
                       }
                     }}
-                    className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200 ${
-                      isDragOver
-                        ? 'border-blue-500 bg-blue-50/70 scale-105'
-                        : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50/50'
-                    }`}
+                    className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200 ${isDragOver
+                      ? 'border-blue-500 bg-blue-50/70 scale-105'
+                      : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50/50'
+                      }`}
                   >
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload className={`w-8 h-8 mb-3 transition-colors ${
-                        isDragOver ? 'text-blue-500' : 'text-gray-400'
-                      }`} />
+                      <Upload className={`w-8 h-8 mb-3 transition-colors ${isDragOver ? 'text-blue-500' : 'text-gray-400'
+                        }`} />
                       <p className="mb-2 text-sm text-muted-foreground text-center">
                         <span className="font-semibold text-foreground">
                           {isDragOver ? 'Drop your file here' : 'Click to upload'}
@@ -457,46 +348,6 @@ export default function AnalyzePage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="text" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-gray-700">
-                  <FileText className="h-5 w-5" />
-                  Paste Resume Text
-                </CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  Copy and paste your resume content directly from any document
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={resumeText}
-                  onChange={(e) => {
-                    setResumeText(e.target.value)
-                    setSelectedFile(null) // Clear file when text is entered
-                    setPortfolioUrl('') // Clear URL when text is entered
-                  }}
-                  placeholder="Paste your resume text here...&#10;&#10;Tip: Copy from your existing resume or LinkedIn profile"
-                  rows={10}
-                  disabled={isAnalyzing}
-                  className="resize-none"
-                />
-                {resumeText && (
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-sm text-muted-foreground">
-                      {resumeText.length} characters
-                    </p>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      resumeText.length > 1000 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300' : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
-                    }`}>
-                      {resumeText.length > 1000 ? 'Good length' : 'Add more content'}
-                    </span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
           <TabsContent value="portfolio" className="mt-6">
             <Card>
               <CardHeader>
@@ -517,7 +368,7 @@ export default function AnalyzePage() {
                       onChange={(e) => {
                         setPortfolioUrl(e.target.value)
                         setSelectedFile(null) // Clear file when URL is entered
-                        setResumeText('') // Clear text when URL is entered
+
                       }}
                       placeholder="https://your-portfolio.com or https://github.com/yourusername"
                       disabled={isAnalyzing}
@@ -565,7 +416,7 @@ export default function AnalyzePage() {
 
         <button
           type="submit"
-          disabled={isAnalyzing || (!selectedFile && !resumeText.trim() && !portfolioUrl.trim())}
+          disabled={isAnalyzing || (!selectedFile && !portfolioUrl.trim())}
           className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isAnalyzing && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}

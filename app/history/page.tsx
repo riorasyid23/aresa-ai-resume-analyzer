@@ -2,35 +2,20 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { Trash2, Eye, Plus, Calendar, FileText, CheckCircle, AlertCircle, Lightbulb, RefreshCw } from 'lucide-react'
-
-interface AnalysisHistory {
-  id: string
-  userId: string
-  inputText: string
-  outputText: string
-  creditCost: number
-  createdAt: number
-}
+import { RefreshCw, FileText, Plus, AlertCircle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useAnalysisStore } from '@/lib/store'
+import { TAnalysis } from '@/types/analysis'
+import { HistoryCard } from '@/components/HistoryCard'
 
 export default function History() {
-  const [history, setHistory] = useState<AnalysisHistory[]>([])
+  const router = useRouter()
+  const { fetchHistory, history } = useAnalysisStore()
+  const [currentHistory, setCurrentHistory] = useState<TAnalysis[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -38,33 +23,52 @@ export default function History() {
     fetchHistory()
   }, [])
 
-  const fetchHistory = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      const response = await fetch('/api/analysis')
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch analysis history')
-      }
-
-      setHistory(data)
-    } catch (err) {
-      console.error('Error fetching history:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load history')
-      toast.error("Failed to load history", {
-        description: "Unable to fetch your analysis history. Please try again.",
-        richColors: true
-      })
-    } finally {
+  useEffect(() => {
+    if (history) {
       setLoading(false)
+      setCurrentHistory(history)
     }
-  }
+  }, [history])
+
+  // const fetchHistory = async () => {
+  //   try {
+  //     setLoading(true)
+  //     setError(null)
+
+  //     const response = await fetch('/api/analysis')
+  //     const data = await response.json()
+
+  //     if (!response.ok) {
+  //       throw new Error(data.error || 'Failed to fetch analysis history')
+  //     }
+
+  //     setHistory(data)
+  //   } catch (err) {
+  //     console.error('Error fetching history:', err)
+  //     setError(err instanceof Error ? err.message : 'Failed to load history')
+  //     toast.error("Failed to load history", {
+  //       description: "Unable to fetch your analysis history. Please try again.",
+  //       richColors: true
+  //     })
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
 
   const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleString() // Convert Unix timestamp to milliseconds
+    // "2025-12-16T05:01:01.000Z" ==> 16 Dec 2025
+
+    const date = new Date(timestamp);
+
+    const formatter = new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+
+    const formattedDate = formatter.format(date);
+
+    return formattedDate;
   }
 
   const getScoreColor = (score: number) => {
@@ -81,12 +85,12 @@ export default function History() {
 
   // For now, we'll show a simple view since we don't have the full analysis details from the backend
   // In a real implementation, you might want to store more details or fetch individual analyses
-  const viewAnalysis = (analysis: AnalysisHistory) => {
-    toast.info("Analysis Details", {
-      description: `Analysis from ${formatDate(analysis.createdAt)}`,
-      richColors: true
-    })
-  }
+  // const viewAnalysis = (analysis: AnalysisHistory) => {
+  //   toast.info("Analysis Details", {
+  //     description: `Analysis from ${formatDate(analysis.createdAt)}`,
+  //     richColors: true
+  //   })
+  // }
 
   if (loading) {
     return (
@@ -135,7 +139,7 @@ export default function History() {
     )
   }
 
-  if (history.length === 0) {
+  if (currentHistory.length === 0) {
     return (
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
@@ -194,73 +198,9 @@ export default function History() {
 
       <Separator className="mb-8" />
 
-      <div className="grid gap-6">
-        {history.map((analysis) => (
-          <Card key={analysis.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center border-2 border-white shadow-sm">
-                    <FileText className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl mb-1">
-                      Resume Analysis
-                    </CardTitle>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {formatDate(analysis.createdAt)}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Badge variant="outline" className="text-xs">
-                          {Math.abs(analysis.creditCost)} credits
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => viewAnalysis(analysis)}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    View Details
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium text-gray-700 mb-2">Analysis Input:</h4>
-                  <p className="text-sm text-muted-foreground bg-gray-50 p-3 rounded-md line-clamp-2">
-                    {analysis.inputText}
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="font-medium text-gray-700 mb-2">Analysis Output:</h4>
-                  <p className="text-sm text-muted-foreground bg-gray-50 p-3 rounded-md line-clamp-3">
-                    {analysis.outputText}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between pt-2 border-t">
-                  <div className="text-sm text-muted-foreground">
-                    ID: {analysis.id}
-                  </div>
-                  <Badge variant="secondary">
-                    {new Date(analysis.createdAt * 1000).toLocaleDateString()}
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      <div className="flex flex-col space-y-6">
+        {currentHistory.map((analysis) => (
+          <HistoryCard key={analysis.id} analysis={analysis} />
         ))}
       </div>
     </div>
