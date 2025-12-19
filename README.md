@@ -23,7 +23,7 @@ ARESA (AI Resume Analyzer) is a cutting-edge web application that leverages adva
 ## 🎯 Features
 
 ### Core Analysis Features
-- **📄 Multi-format Support**: Upload PDF files or paste resume text directly
+- **📄 Multi-format Support**: Upload PDF or DOCX files directly
 - **🎯 Intelligent Scoring**: Comprehensive scoring based on content quality, structure, and industry standards
 - **💪 Strengths Analysis**: Identifies key strengths and competitive advantages
 - **🎯 Weakness Detection**: Pinpoints areas needing improvement
@@ -41,7 +41,7 @@ ARESA (AI Resume Analyzer) is a cutting-edge web application that leverages adva
 ### Technical Features
 - **🔧 Modern Architecture**: Built with Next.js 15 App Router for optimal performance
 - **📦 Efficient State Management**: Zustand for lightweight, scalable state handling
-- **🎨 Beautiful UI**: Tailwind CSS for modern, accessible design
+- **🎨 Beautiful UI**: Modern design with Shadcn UI, Framer Motion animations, and Tailwind CSS
 - **⚡ Fast Processing**: Optimized for quick analysis turnaround
 - **🔒 Type Safety**: Full TypeScript implementation for reliability
 - **📱 Mobile-First**: Responsive design that works on all devices
@@ -55,6 +55,8 @@ ARESA (AI Resume Analyzer) is a cutting-edge web application that leverages adva
 
 ### Styling & UI
 - **Tailwind CSS 3.4.0** - Utility-first CSS framework for rapid styling
+- **Shadcn UI** - Reusable components built with Radix UI and Tailwind CSS
+- **Framer Motion** - Production-ready motion library for React
 - **PostCSS 8.4.0** - CSS processing tool
 - **Autoprefixer 10.4.0** - Automatic CSS vendor prefixing
 
@@ -168,7 +170,7 @@ aresa-ai-resume-analyzer/
 Analyzes a resume and returns comprehensive feedback.
 
 #### Request Body (FormData)
-- `file` (optional): PDF file upload
+- `file` (optional): PDF or DOCX file upload
 - `text` (optional): Raw resume text
 
 #### Response Format
@@ -207,7 +209,7 @@ Analyzes a resume and returns comprehensive feedback.
 
 ### Getting Started
 1. **Access the Application**: Open `http://localhost:3000` in your browser
-2. **Choose Input Method**: Upload a PDF or paste resume text
+2. **Upload Your Resume**: Drag and drop your PDF or DOCX file
 3. **Submit for Analysis**: Click "Analyze Resume" to start processing
 
 ### Understanding Results
@@ -227,8 +229,7 @@ Analyzes a resume and returns comprehensive feedback.
 - **Clear History**: Remove all historical analyses at once
 
 ### Best Practices
-- **PDF Upload**: Ensure PDFs are text-based (not scanned images)
-- **Text Input**: Copy-paste from a word processor for best results
+- **PDF/DOCX Upload**: Ensure files are text-based (not scanned images) and under 10MB
 - **Regular Analysis**: Re-analyze after making improvements
 - **History Review**: Compare analyses over time to track progress
 

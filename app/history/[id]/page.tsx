@@ -1,213 +1,74 @@
 'use client'
 
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Progress } from '@/components/ui/progress'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Coins, FileText, Info } from 'lucide-react'
-import { AnalysisResult, useAnalysisStore } from '@/lib/store'
+import { Card, CardContent } from '@/components/ui/card'
+import { AlertCircle, RefreshCw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useAnalysisStore, AnalysisResult } from '@/lib/store'
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import AnalysisResultView from '@/components/AnalysisResultView'
 
-interface AnalysisResultViewProps {
-    result: AnalysisResult
-}
-
-export default function AnalysisResultView() {
+export default function HistoryDetail() {
     const { id } = useParams()
     const { fetchAnalysis, currentAnalysis } = useAnalysisStore()
     const [result, setResult] = useState<AnalysisResult | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         if (!id) return
-        fetchAnalysis(id as string)
+
+        const loadAnalysis = async () => {
+            setLoading(true)
+            try {
+                await fetchAnalysis(id as string)
+            } catch (err) {
+                setError('Failed to load analysis')
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        loadAnalysis()
     }, [id])
 
     useEffect(() => {
-        if (currentAnalysis) setResult(currentAnalysis)
+        if (currentAnalysis) {
+            setResult(currentAnalysis)
+            setLoading(false)
+        }
     }, [currentAnalysis])
 
-    const getScoreColor = (score: number) => {
-        if (score >= 80) return 'text-green-600'
-        if (score >= 60) return 'text-yellow-600'
-        return 'text-red-600'
-    }
-
-    const getScoreBg = (score: number) => {
-        if (score >= 80) return 'bg-green-100'
-        if (score >= 60) return 'bg-yellow-100'
-        return 'bg-red-100'
-    }
-
-    const getScoreBadgeVariant = (score: number) => {
-        if (score >= 80) return 'default' as const
-        if (score >= 60) return 'secondary' as const
-        return 'destructive' as const
-    }
-
-    const getScoreLabel = (score: number) => {
-        if (score >= 80) return 'Excellent'
-        if (score >= 60) return 'Good'
-        return 'Needs Improvement'
-    }
-
-    return (
-        <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-foreground mb-2">
-                    ARESA Analysis Results
-                </h1>
-                <Link href="/" className="text-primary hover:text-primary/80 text-sm">
-                    ← Analyze another resume
-                </Link>
+    if (loading) {
+        return (
+            <div className="max-w-4xl mx-auto py-12">
+                <div className="text-center">
+                    <RefreshCw className="w-8 h-8 mx-auto text-blue-500 animate-spin mb-4" />
+                    <h2 className="text-xl font-semibold">Loading Analysis...</h2>
+                </div>
             </div>
+        )
+    }
 
-            {/* Credit Usage & File Info */}
-            {(result?.creditsDeducted || result?.filename) && (
-                <Alert className="mb-6 bg-blue-50 border-blue-200">
-                    <Info className="h-4 w-4 text-blue-600" />
-                    <AlertTitle className="text-blue-800">Analysis Complete</AlertTitle>
-                    <AlertDescription className="text-blue-700 flex flex-col sm:flex-row sm:items-center gap-4 mt-2">
-                        {result?.filename && (
-                            <span className="flex items-center gap-1.5">
-                                <FileText className="h-4 w-4" />
-                                File: <span className="font-medium">{result.filename}</span>
-                            </span>
-                        )}
-                        {result?.creditsDeducted !== undefined && (
-                            <span className="flex items-center gap-1.5">
-                                <Coins className="h-4 w-4" />
-                                Credits used: <span className="font-medium">{result.creditsDeducted}</span>
-                                {result?.creditsRemaining !== undefined && (
-                                    <span className="opacity-80">(Remaining: {result.creditsRemaining})</span>
-                                )}
-                            </span>
-                        )}
-                    </AlertDescription>
-                </Alert>
-            )}
-
-            {/* Resume Score */}
-            <Card className="mb-6">
-                <CardHeader className="text-center">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                        <CardTitle className="text-xl">Resume Score</CardTitle>
-                        <Badge variant={getScoreBadgeVariant(result?.score ?? 0)}>
-                            {getScoreLabel(result?.score ?? 0)}
-                        </Badge>
-                    </div>
-                    <div className="flex flex-col items-center gap-4">
-                        <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full ${getScoreBg(result?.score ?? 0)}`}>
-                            <span className={`text-3xl font-bold ${getScoreColor(result?.score ?? 0)}`}>
-                                {result?.score}
-                            </span>
-                        </div>
-                        <div className="w-full max-w-xs">
-                            <Progress value={result?.score ?? 0} className="h-2" />
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent className="text-center">
-                    <p className="text-muted-foreground">
-                        {(result ? result.score >= 80 : false) ? 'Excellent resume!' :
-                            (result ? result.score >= 60 : false) ? 'Good resume with room for improvement' :
-                                'Resume needs significant improvements'}
-                    </p>
-                </CardContent>
-            </Card>
-
-            <Separator className="my-6" />
-
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-                {/* Strengths */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-green-700">
-                            <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">
-                                ✅ Strengths
-                            </Badge>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ul className="space-y-3">
-                            {result?.strengths.map((strength: string, index: number) => (
-                                <li key={index} className="text-foreground flex items-start">
-                                    <span className="text-green-500 mr-3 mt-0.5">•</span>
-                                    <span>{strength}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </CardContent>
-                </Card>
-
-                {/* Weaknesses */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-red-700">
-                            <Badge variant="secondary" className="bg-red-100 text-red-800 hover:bg-red-100">
-                                ⚠️ Areas for Improvement
-                            </Badge>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ul className="space-y-3">
-                            {result?.weaknesses.map((weakness: string, index: number) => (
-                                <li key={index} className="text-foreground flex items-start">
-                                    <span className="text-red-500 mr-3 mt-0.5">•</span>
-                                    <span>{weakness}</span>
-                                </li>
-                            ))}
-                        </ul>
+    if (error || !result) {
+        return (
+            <div className="max-w-4xl mx-auto py-12">
+                <Card className="border-red-200">
+                    <CardContent className="flex flex-col items-center p-6 text-center">
+                        <AlertCircle className="w-10 h-10 text-red-500 mb-4" />
+                        <h2 className="text-xl font-bold text-red-700 mb-2">Analysis Not Found</h2>
+                        <p className="text-gray-600 mb-6">
+                            We couldn't find the analysis you're looking for. It might have been deleted or the ID is incorrect.
+                        </p>
+                        <Button asChild>
+                            <Link href="/history">Back to History</Link>
+                        </Button>
                     </CardContent>
                 </Card>
             </div>
+        )
+    }
 
-            <Separator className="my-6" />
-
-            {/* Actionable Improvements */}
-            <Card className="mb-6">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-blue-700">
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-                            🚀 Actionable Improvements
-                        </Badge>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <ul className="space-y-3">
-                        {result?.improvements.map((improvement: string, index: number) => (
-                            <li key={index} className="text-foreground flex items-start">
-                                <Badge variant="outline" className="mr-3 mt-0.5 flex-shrink-0 w-6 h-6 p-0 flex items-center justify-center text-xs">
-                                    {index + 1}
-                                </Badge>
-                                <span>{improvement}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </CardContent>
-            </Card>
-
-            {/* Rewritten Summary */}
-            {result?.rewritten_summary && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-purple-700">
-                            <Badge variant="secondary" className="bg-purple-100 text-purple-800 hover:bg-purple-100">
-                                ✨ Suggested Summary Rewrite
-                            </Badge>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="bg-muted rounded-md p-4">
-                            <p className="text-foreground whitespace-pre-line">
-                                {result?.rewritten_summary}
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-        </div>
-    )
+    return <AnalysisResultView result={result} />
 }

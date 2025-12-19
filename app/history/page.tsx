@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import { useAnalysisStore } from '@/lib/store'
 import { TAnalysis } from '@/types/analysis'
 import { HistoryCard } from '@/components/HistoryCard'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function History() {
   const router = useRouter()
@@ -34,14 +35,14 @@ export default function History() {
   //   try {
   //     setLoading(true)
   //     setError(null)
-
+  //
   //     const response = await fetch('/api/analysis')
   //     const data = await response.json()
-
+  //
   //     if (!response.ok) {
   //       throw new Error(data.error || 'Failed to fetch analysis history')
   //     }
-
+  //
   //     setHistory(data)
   //   } catch (err) {
   //     console.error('Error fetching history:', err)
@@ -141,7 +142,11 @@ export default function History() {
 
   if (currentHistory.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-4xl mx-auto"
+      >
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">ARESA Analysis History</h1>
           <p className="text-muted-foreground">No previous analyses found</p>
@@ -168,13 +173,33 @@ export default function History() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     )
+  }
+
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
   }
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8"
+      >
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">ARESA Analysis History</h1>
           <p className="text-muted-foreground flex items-center gap-2">
@@ -194,15 +219,24 @@ export default function History() {
             Refresh
           </Button>
         </div>
-      </div>
+      </motion.div>
 
       <Separator className="mb-8" />
 
-      <div className="flex flex-col space-y-6">
-        {currentHistory.map((analysis) => (
-          <HistoryCard key={analysis.id} analysis={analysis} />
-        ))}
-      </div>
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="flex flex-col space-y-6"
+      >
+        <AnimatePresence>
+          {currentHistory.map((analysis) => (
+            <motion.div key={analysis.id} variants={item}>
+              <HistoryCard analysis={analysis} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </motion.div>
     </div>
   )
 }
