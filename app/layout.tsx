@@ -4,10 +4,15 @@ import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from 'next-themes'
 import { Providers } from '@/components/providers'
 import { AuthNav } from '@/components/auth-nav'
+import { SessionWatcher } from '@/components/session-watcher'
 
 export const metadata: Metadata = {
   title: 'ARESA - AI Resume Analyzer',
   description: 'Transform your resume with intelligent AI-powered analysis and actionable feedback',
+  icons: {
+    icon: '/favicon-aresa.png',
+    apple: '/favicon-aresa.png',
+  },
 }
 
 export default function RootLayout({
@@ -25,8 +30,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-          <AuthNav />
-            <main className="container mx-auto px-4 py-8">
+            <AuthNav />
+            <SessionWatcher />
+            <main>
               {children}
             </main>
             <Toaster />

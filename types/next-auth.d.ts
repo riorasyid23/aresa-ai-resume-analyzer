@@ -11,6 +11,7 @@ declare module "next-auth" {
       credits: number
     }
     backendToken: string
+    loginAt: number
   }
 
   interface User {
@@ -32,5 +33,6 @@ declare module "next-auth/jwt" {
     phoneNumber: string
     credits: number
     backendToken: string
+    loginAt: number
   }
 }

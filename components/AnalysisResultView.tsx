@@ -61,7 +61,7 @@ export default function AnalysisResultView({ result }: AnalysisResultViewProps) 
             initial="hidden"
             animate="show"
             variants={container}
-            className="max-w-4xl mx-auto"
+            className="max-w-4xl mx-auto px-4 py-8"
         >
             <motion.div variants={item} className="text-center mb-8">
                 <h1 className="text-3xl font-bold text-foreground mb-2">

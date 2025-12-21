@@ -145,7 +145,7 @@ export default function History() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto"
+        className="max-w-4xl mx-auto px-4 py-8"
       >
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">ARESA Analysis History</h1>
@@ -193,7 +193,7 @@ export default function History() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto px-4 py-8">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

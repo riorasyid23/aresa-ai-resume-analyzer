@@ -7,11 +7,14 @@ export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt" as const,
-    maxAge: 24 * 60 * 60, // 24 hours
-    updateAge: 24 * 60 * 60, // 24 hours
+    maxAge: 15 * 60, // 15 minutes
+    updateAge: 15 * 60, // 15 minutes
+    // maxAge: 20, // 20 seconds for testing
+    // updateAge: 20, // 20 seconds for testing
   },
   jwt: {
-    maxAge: 24 * 60 * 60, // 24 hours
+    maxAge: 15 * 60, // 15 minutes
+    // maxAge: 20, // 20 seconds for testing
   },
   providers: [
     CredentialsProvider({
@@ -82,6 +85,7 @@ export const authOptions = {
         token.phoneNumber = user.phoneNumber
         token.credits = user.credits
         token.backendToken = user.backendToken
+        token.loginAt = Date.now()
       }
 
       // Handle session update
@@ -103,6 +107,7 @@ export const authOptions = {
         session.user.phoneNumber = token.phoneNumber as string
         session.user.credits = token.credits as number
         session.backendToken = token.backendToken as string
+        session.loginAt = token.loginAt as number
       }
       return session
     },

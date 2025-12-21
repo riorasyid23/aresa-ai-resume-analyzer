@@ -44,7 +44,7 @@ export default function LandingPage() {
             <Link href="/login">
               <Button size="lg" className="text-lg px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
                 <Upload className="w-5 h-5 mr-2" />
-                Get Started - Analyze Resume
+                Get Started
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
@@ -57,7 +57,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">10M+</div>
+              <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">100+</div>
               <div className="text-gray-600 dark:text-gray-400">Resumes Analyzed</div>
             </div>
             <div className="text-center">
@@ -217,7 +217,7 @@ export default function LandingPage() {
             <Link href="/login">
               <Button size="lg" variant="secondary" className="text-lg px-8 py-3">
                 <FileText className="w-5 h-5 mr-2" />
-                Start Your Analysis Now
+                Start Now
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
@@ -235,7 +235,7 @@ export default function LandingPage() {
             <span className="text-xl font-bold">ARESA</span>
           </div>
           <p className="text-gray-400 mb-4">
-            AI Resume Analyzer • Powered by Cloudflare Workers & Groq AI
+            Resume Analyzer • Powered by AI
           </p>
           <p className="text-sm text-gray-500">
             © 2025 ARESA. All rights reserved.
