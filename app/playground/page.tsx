@@ -83,15 +83,15 @@ export default function AnalyzePage() {
       }
 
       if (result.creditsRemaining !== undefined) {
-        await update()
+        await update({ credits: result.creditsRemaining })
       }
 
       setCurrentAnalysis(result)
 
       if (result.id) {
-        router.push(`/results/${result.id}`)
+        router.push(`/history/${result.id}`)
       } else {
-        router.push('/results')
+        router.push('/history')
       }
     } catch (error) {
       console.error('Error in handleSubmit:', error)

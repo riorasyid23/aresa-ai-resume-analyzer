@@ -11,7 +11,7 @@ export const authOptions = {
     updateAge: 24 * 60 * 60, // 24 hours
   },
   jwt: {
-      maxAge: 24 * 60 * 60, // 24 hours
+    maxAge: 24 * 60 * 60, // 24 hours
   },
   providers: [
     CredentialsProvider({
@@ -69,11 +69,11 @@ export const authOptions = {
         }
       }
 
-      
+
     })
   ],
   callbacks: {
-    async jwt({ token, user }: { token: any, user: any }) {
+    async jwt({ token, user, trigger, session }: { token: any, user: any, trigger?: string, session?: any }) {
       // Add user data to JWT token
       if (user) {
         token.id = user.id
@@ -83,6 +83,15 @@ export const authOptions = {
         token.credits = user.credits
         token.backendToken = user.backendToken
       }
+
+      // Handle session update
+      if (trigger === "update" && session) {
+        if (session.credits !== undefined) {
+          token.credits = session.credits
+        }
+        // Add other updateable fields here if needed
+      }
+
       return token
     },
     async session({ session, token }: { session: any, token: any }) {
