@@ -9,6 +9,7 @@ declare module "next-auth" {
       lastName: string
       phoneNumber: string
       credits: number
+      creditResetAt: string
     }
     backendToken: string
     loginAt: number
@@ -21,6 +22,7 @@ declare module "next-auth" {
     lastName: string
     phoneNumber: string
     credits: number
+    creditResetAt: string
     backendToken: string
   }
 }
@@ -32,6 +34,7 @@ declare module "next-auth/jwt" {
     lastName: string
     phoneNumber: string
     credits: number
+    creditResetAt: string
     backendToken: string
     loginAt: number
   }

@@ -4,6 +4,7 @@ import { useSession, signOut } from "next-auth/react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { CreditDropdown } from "@/components/CreditDropdown"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,12 +104,9 @@ export function AuthNav() {
         <div className="flex items-center space-x-2">
           {session ? (
             <>
-              {/* Credits - Desktop Only */}
-              <div className="hidden sm:flex items-center space-x-1 px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800">
-                <CreditCard className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                  {session.user.credits}
-                </span>
+              {/* Credits Dropdown - Desktop Only */}
+              <div className="hidden sm:block">
+                <CreditDropdown />
               </div>
 
               {/* User Dropdown */}

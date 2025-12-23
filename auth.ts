@@ -63,6 +63,7 @@ export const authOptions = {
             lastName: data.user.lastName,
             phoneNumber: data.user.phoneNumber,
             credits: data.user.credits,
+            creditResetAt: data.user.creditResetAt,
             // Store the backend JWT token
             backendToken: data.token,
           }
@@ -84,6 +85,7 @@ export const authOptions = {
         token.lastName = user.lastName
         token.phoneNumber = user.phoneNumber
         token.credits = user.credits
+        token.creditResetAt = user.creditResetAt
         token.backendToken = user.backendToken
         token.loginAt = Date.now()
       }
@@ -92,6 +94,9 @@ export const authOptions = {
       if (trigger === "update" && session) {
         if (session.credits !== undefined) {
           token.credits = session.credits
+        }
+        if (session.creditResetAt !== undefined) {
+          token.creditResetAt = session.creditResetAt
         }
         // Add other updateable fields here if needed
       }
@@ -106,6 +111,7 @@ export const authOptions = {
         session.user.lastName = token.lastName as string
         session.user.phoneNumber = token.phoneNumber as string
         session.user.credits = token.credits as number
+        session.user.creditResetAt = token.creditResetAt as string
         session.backendToken = token.backendToken as string
         session.loginAt = token.loginAt as number
       }
