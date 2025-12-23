@@ -105,9 +105,9 @@ export function AuthNav() {
           {session ? (
             <>
               {/* Credits Dropdown - Desktop Only */}
-              <div className="hidden sm:block">
-                <CreditDropdown />
-              </div>
+              {/* <div className="hidden sm:block">
+              </div> */}
+              <CreditDropdown />
 
               {/* User Dropdown */}
               <DropdownMenu>

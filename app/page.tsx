@@ -14,7 +14,10 @@ import {
   ArrowRight,
   Upload,
   Brain,
-  BarChart3
+  BarChart3,
+  Gift,
+  Clock,
+  Infinity
 } from "lucide-react"
 
 export default function LandingPage() {
@@ -155,6 +158,121 @@ export default function LandingPage() {
               </CardDescription>
             </CardHeader>
           </Card>
+        </div>
+      </section>
+
+      {/* Credits & Quota Section */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Smart Credit System
+          </h2>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Analyze more resumes, smarter. Our flexible credit system gives you the freedom to analyze on your terms.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          {/* Monthly Credits Card */}
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-100 dark:bg-amber-900/20 rounded-full -mr-16 -mt-16"></div>
+            <CardHeader className="relative">
+              <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/20 rounded-lg flex items-center justify-center mb-4">
+                <Gift className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+              </div>
+              <CardTitle className="text-xl">50 Monthly Credits</CardTitle>
+              <CardDescription className="text-base">
+                Get 50 fresh credits every month to analyze resumes. Use them strategically across the month.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  <span className="font-semibold text-amber-900 dark:text-amber-100">Refresh Monthly:</span> Your 50 credits reset on the 1st of each month at midnight, giving you a fresh start every month.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Automatic Renewal Card */}
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100 dark:bg-blue-900/20 rounded-full -mr-16 -mt-16"></div>
+            <CardHeader className="relative">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mb-4">
+                <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <CardTitle className="text-xl">Automatic Renewal</CardTitle>
+              <CardDescription className="text-base">
+                No need to do anything. Credits automatically renew on your reset date without interruption.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  <span className="font-semibold text-blue-900 dark:text-blue-100">Next Refresh:</span> Check the credits dropdown in the navbar to see your next reset date.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Fair Usage Card */}
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-100 dark:bg-purple-900/20 rounded-full -mr-16 -mt-16"></div>
+            <CardHeader className="relative">
+              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center mb-4">
+                <Infinity className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <CardTitle className="text-xl">Unlimited Potential</CardTitle>
+              <CardDescription className="text-base">
+                Want more credits? Our coming soon top-up feature will let you purchase additional credits anytime.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  <span className="font-semibold text-purple-900 dark:text-purple-100">Coming Soon:</span> Purchase credits on-demand to never run out when you need them most.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Credit Tips */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl border border-blue-200 dark:border-blue-800 p-8">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            Pro Tips for Maximum Results
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex gap-3">
+              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-gray-900 dark:text-white">Plan Your Analysis</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Prioritize your analyses and spread them throughout the day</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-gray-900 dark:text-white">Track Your Credits</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Check the credits dropdown to see your balance and reset date</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-gray-900 dark:text-white">Sync Your Credits</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Click refresh in the dropdown to sync latest credit balance</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-gray-900 dark:text-white">Implement Feedback</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Apply insights from each analysis to improve before next review</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
